@@ -327,6 +327,10 @@
 * [Refactor UpdateInvoice](https://github.com/lightningnetwork/lnd/pull/8100) to
   make it simpler to adjust code to also support SQL InvoiceDB implementation.
 
+* [Expanded SweeperStore](https://github.com/lightningnetwork/lnd/pull/8147) to
+  also store the feerate, fees paid, and whether it's published or not for a
+  given sweeping transaction.
+
 ## Code Health
 
 * [Remove database pointers](https://github.com/lightningnetwork/lnd/pull/8117) 
