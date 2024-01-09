@@ -283,6 +283,10 @@
 * [Correct `fmt.Errorf` error wrapping 
   instances](https://github.com/lightningnetwork/lnd/pull/8503)
 
+* The pending inputs in the sweeper is now
+  [stateful](https://github.com/lightningnetwork/lnd/pull/8423) to better
+  manage the lifecycle of the inputs.
+
 ## Breaking Changes
 ## Performance Improvements
 
