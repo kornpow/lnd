@@ -848,4 +848,8 @@ type MempoolWatcher interface {
 	// CancelMempoolSpendEvent allows the caller to cancel a subscription to
 	// watch for a spend of an outpoint in the mempool.
 	CancelMempoolSpendEvent(sub *MempoolSpendEvent)
+
+	// LookupInputMempoolSpend looks up the mempool to find a spending tx
+	// which spends the given outpoint.
+	LookupInputMempoolSpend(op wire.OutPoint) (*wire.MsgTx, bool)
 }

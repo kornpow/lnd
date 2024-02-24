@@ -1137,3 +1137,27 @@ func (b *BtcdNotifier) CancelMempoolSpendEvent(
 
 	b.memNotifier.UnsubscribeEvent(sub)
 }
+
+// LookupInputMempoolSpend takes an outpoint and queries the mempool to find
+// its spending tx. Returns the tx if found, and boolean to indicate whether it
+// exists or not.
+//
+// NOTE: part of the MempoolWatcher interface.
+func (b *BtcdNotifier) LookupInputMempoolSpend(
+	op wire.OutPoint) (*wire.MsgTx, bool) {
+
+	// Find the spending txid.
+	txid, found := b.chainConn.LookupInputMempoolSpend(op)
+	if !found {
+		return nil, false
+	}
+
+	// Query the spending tx using the id.
+	tx, err := b.chainConn.GetRawTransaction(&txid)
+	if err != nil {
+		// TODO(yy): enable logging errors in this package.
+		return nil, false
+	}
+
+	return tx.MsgTx().Copy(), true
+}

@@ -1347,36 +1347,9 @@ func (s *UtxoSweeper) mempoolLookup(op wire.OutPoint) (*wire.MsgTx, bool) {
 		return nil, false
 	}
 
-	// Make a subscription to the mempool. If this outpoint is already
-	// spent in mempool, we should get a spending event back immediately.
-	mempoolSpent, err := s.cfg.Mempool.SubscribeMempoolSpent(op)
-	if err != nil {
-		log.Errorf("Unable to subscribe to mempool spend for input "+
-			"%v: %v", op, err)
-
-		return nil, false
-	}
-
-	// We want to cancel this subscription in the end as we are only
-	// interested in a one-time query and this subscription won't be
-	// listened once this method returns.
-	defer s.cfg.Mempool.CancelMempoolSpendEvent(mempoolSpent)
-
-	// Do a non-blocking read on the spent event channel.
-	select {
-	case details := <-mempoolSpent.Spend:
-		log.Debugf("Found mempool spend of input %s in tx=%s",
-			op, details.SpenderTxHash)
-
-		// Found the spending transaction in mempool. This means we
-		// need to consider RBF constraints if we want to include this
-		// input in a new sweeping transaction.
-		return details.SpendingTx, true
-
-	default:
-	}
-
-	return nil, false
+	// Query this input in the mempool. If this outpoint is already spent
+	// in mempool, we should get a spending event back immediately.
+	return s.cfg.Mempool.LookupInputMempoolSpend(op)
 }
 
 // handleNewInput processes a new input by registering spend notification and

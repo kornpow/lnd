@@ -39,3 +39,16 @@ func (m *MockMempoolWatcher) CancelMempoolSpendEvent(
 
 	m.Called(sub)
 }
+
+// LookupInputMempoolSpend looks up the mempool to find a spending tx which
+// spends the given outpoint.
+func (m *MockMempoolWatcher) LookupInputMempoolSpend(
+	op wire.OutPoint) (*wire.MsgTx, bool) {
+
+	args := m.Called(op)
+	if args.Get(0) == nil {
+		return nil, args.Bool(1)
+	}
+
+	return args.Get(0).(*wire.MsgTx), args.Bool(1)
+}
