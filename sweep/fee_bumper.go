@@ -607,6 +607,250 @@ type monitorRecord struct {
 	fee btcutil.Amount
 }
 
+// Start starts the publisher by subscribing to block epoch updates and kicking
+// off the monitor loop.
+func (t *TxPublisher) Start() error {
+	log.Info("TxPublisher starting...")
+
+	blockEvent, err := t.cfg.Notifier.RegisterBlockEpochNtfn(nil)
+	if err != nil {
+		return fmt.Errorf("register block epoch ntfn: %v", err)
+	}
+
+	select {
+	case bestBlock := <-blockEvent.Epochs:
+		t.currentHeight = bestBlock.Height
+
+	case <-t.quit:
+		log.Debugf("TxPublisher shutting down, exit start process")
+		return nil
+	}
+
+	t.wg.Add(1)
+	go t.monitor(blockEvent)
+
+	return nil
+}
+
+// Stop stops the publisher and waits for the monitor loop to exit.
+func (t *TxPublisher) Stop() {
+	log.Info("TxPublisher stopping...")
+
+	t.wg.Wait()
+	close(t.quit)
+}
+
+// monitor is the main loop driven by new blocks. Whevenr a new block arrives,
+// it will examine all the txns being monitored, and check if any of them needs
+// to be bumped. If so, it will attempt to bump the fee of the tx.
+//
+// NOTE: Must be run as a goroutine.
+func (t *TxPublisher) monitor(blockEvent *chainntnfs.BlockEpochEvent) {
+	defer blockEvent.Cancel()
+	defer t.wg.Done()
+
+	select {
+	case epoch, ok := <-blockEvent.Epochs:
+		if !ok {
+			// We should stop the publisher before stopping the
+			// chain service. Otherwise it indicates an error.
+			log.Error("Block epoch channel closed, exit monitor")
+
+			return
+		}
+
+		// Update the best known height for the publisher.
+		t.currentHeight = epoch.Height
+
+		// Check all monitored txns to see if any of them needs to be
+		// bumped.
+		t.processRecords()
+
+	case <-t.quit:
+		log.Debug("Fee bumper stopped, exit monitor")
+		return
+	}
+}
+
+// processRecords checks all the txns being monitored, and checks if any of
+// them needs to be bumped. If so, it will attempt to bump the fee of the tx.
+func (t *TxPublisher) processRecords() {
+	// confirmedRecords stores a map of the records which have been
+	// confirmed.
+	confirmedRecords := make(map[uint64]*monitorRecord)
+
+	// feeBumpRecords stores a map of the records which need to be bumped.
+	feeBumpRecords := make(map[uint64]*monitorRecord)
+
+	// visitor is a helper closure that visits each record and divides them
+	// into two groups.
+	visitor := func(requestID uint64, r *monitorRecord) error {
+		log.Tracef("Checking monitor recordID=%v for tx=%v", requestID,
+			r.tx.TxHash())
+
+		// If the tx is already confirmed, we can stop monitoring it.
+		if isConfirmed(r.confEvent) {
+			confirmedRecords[requestID] = r
+
+			// Move to the next record.
+			return nil
+		}
+
+		feeBumpRecords[requestID] = r
+
+		// Return nil to move to the next record.
+		return nil
+	}
+
+	// Iterate through all the records and divide them into two groups.
+	t.records.ForEach(visitor)
+
+	// For records that are confirmed, we'll notify the caller about this
+	// result.
+	for requestID, r := range confirmedRecords {
+		log.Debugf("Tx=%v is confirmed", r.tx.TxHash())
+		t.wg.Add(1)
+		go t.handleTxConfirmed(r.tx, requestID)
+	}
+
+	// For records that are not confirmed, we perform a fee bump if needed.
+	for requestID, r := range feeBumpRecords {
+		log.Debugf("Attempting to fee bump Tx=%v", r.tx.TxHash())
+		t.wg.Add(1)
+		go t.handleFeeBumpTx(requestID, r)
+	}
+}
+
+// handleTxConfirmed is called when a monitored tx is confirmed. It will
+// notify the subscriber then remove the record from the maps .
+//
+// NOTE: Must be run as a goroutine to avoid blocking on sending the result.
+func (t *TxPublisher) handleTxConfirmed(tx *wire.MsgTx, requestID uint64) {
+	defer t.wg.Done()
+
+	// Create a result that will be sent to the resultChan which is
+	// listened by the caller.
+	result := &BumpResult{
+		Event:     TxConfirmed,
+		Tx:        tx,
+		requestID: requestID,
+	}
+
+	// Notify that this tx is confirmed and remove the record from the map.
+	t.handleResult(result)
+}
+
+// handleFeeBumpTx checks if the tx needs to be bumped, and if so, it will
+// attempt to bump the fee of the tx.
+//
+// NOTE: Must be run as a goroutine to avoid blocking on sending the result.
+func (t *TxPublisher) handleFeeBumpTx(requestID uint64, r *monitorRecord) {
+	defer t.wg.Done()
+
+	oldTxid := r.tx.TxHash()
+
+	// Get the current conf target for this record.
+	confTarget := calcCurrentConfTarget(
+		t.currentHeight, r.req.DeadlineHeight,
+	)
+
+	// Ask the fee function whether a bump is needed. We expect the fee
+	// function to increase its returned fee rate after calling this
+	// method.
+	if r.feeFunction.SkipFeeBump(confTarget) {
+		log.Debugf("Skip bumping tx %v at height=%v", oldTxid,
+			t.currentHeight)
+
+		return
+	}
+
+	// The fee function now has a new fee rate, we will use it to bump the
+	// fee of the tx.
+	result, err := t.createAndPublishTx(requestID, r)
+	if err != nil {
+		log.Errorf("Failed to bump tx %v: %v", oldTxid, err)
+
+		return
+	}
+
+	// Notify the new result.
+	t.handleResult(result)
+}
+
+// createAndPublishTx creates a new tx with a higher fee rate and publishes it
+// to the network. It will update the record with the new tx and fee rate if
+// successfully created, and return the result when published successfully.
+func (t *TxPublisher) createAndPublishTx(requestID uint64,
+	r *monitorRecord) (*BumpResult, error) {
+
+	// Fetch the old tx.
+	oldTx := r.tx
+
+	// Create a new tx with the new fee rate.
+	//
+	// NOTE: The fee function is expected to have increased its returned
+	// fee rate after calling the SkipFeeBump method. So we can use it
+	// directly here.
+	tx, fee, err := t.createAndCheckTx(r.req, r.feeFunction)
+
+	// If the tx doesn't not have enought budget, we will return a result
+	// so the sweeper can handle it by re-clustering the utxos.
+	if errors.Is(err, ErrNotEnoughBudget) {
+		log.Warnf("Fail to fee bump tx %v: %v", oldTx.TxHash(), err)
+
+		return &BumpResult{
+			Event:     TxFailed,
+			Tx:        oldTx,
+			Err:       err,
+			requestID: requestID,
+		}, nil
+	}
+
+	// If the error is not budget related, we will return an error and let
+	// the fee bumper retry it at next block.
+	//
+	// NOTE: we can check the RBF error here and ask the fee function to
+	// recalculate the fee rate. However, this would defeat the purpose of
+	// using a deadline based fee function:
+	// - if the deadline is far away, there's no rush to RBF the tx.
+	// - if the deadline is close, we expect the fee function to give us a
+	//   higher fee rate. If the fee rate cannot satisfy the RBF rules, it
+	//   means the budget is not enough.
+	if err != nil {
+		log.Infof("Failed to bump tx %v: %v", oldTx.TxHash(), err)
+		return nil, err
+	}
+
+	// Register a new record by overwriting the same requestID.
+	t.records.Store(requestID, &monitorRecord{
+		tx:          tx,
+		req:         r.req,
+		feeFunction: r.feeFunction,
+		fee:         fee,
+	})
+
+	// Attempt to broadcast this new tx.
+	result, err := t.broadcast(requestID)
+	if err != nil {
+		return nil, err
+	}
+
+	// A successful replacement tx is created, attach the old tx.
+	result.ReplacedTx = oldTx
+
+	// If the new tx failed to be published, we will return the result so
+	// the caller can handle it.
+	if result.Event == TxFailed {
+		return result, nil
+	}
+
+	log.Infof("Replaced tx=%v with new tx=%v", oldTx.TxHash(), tx.TxHash())
+
+	// Otherwise, it's a successful RBF, set the event and return.
+	result.Event = TxReplaced
+	return result, nil
+}
+
 // calcCurrentConfTarget calculates the current confirmation target based on
 // the deadline height. The conf target is capped at 0 if the deadline has
 // already been past.
@@ -628,4 +872,23 @@ func calcCurrentConfTarget(currentHeight, deadline int32) uint32 {
 	}
 
 	return confTarget
+}
+
+// isConfirmed is a helper method that returns a boolean indicating whether the
+// tx is confirmed.
+func isConfirmed(event *chainntnfs.ConfirmationEvent) bool {
+	select {
+	// TODO(yy): check if there's a race between sending a block epoch and
+	// notifying a confirmed tx. If the block epoch is sent first, and the
+	// tx is confirmed in this block, by the time we check the confirmation
+	// event, it might not be sent yet.
+	case event := <-event.Confirmed:
+		log.Debugf("Sweep tx %v confirmed in block %v",
+			event.Tx.TxHash(), event.BlockHeight)
+
+		return true
+
+	default:
+		return false
+	}
 }
