@@ -774,6 +774,9 @@ message GetTransactionsRequest {
     This value should be set to 0 to return all transactions.
     */
     uint32 max_transactions = 5;
+
+    //  newest block first or otherwise, oldest block first.
+    bool reverse = 6;
 }
 
 message TransactionDetails {
