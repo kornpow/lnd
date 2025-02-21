@@ -64,14 +64,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "min_confs",
-            "description": "The minimum number of confirmations each one of your outputs used for the\nfunding transaction must satisfy. If this is not specified, the default\nvalue of 1 is used.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
           }
         ],
         "tags": [
@@ -391,7 +383,7 @@
     },
     "/v1/channels/backup/verify": {
       "post": {
-        "summary": "lncli: `verifychanbackup`\nVerifyChanBackup allows a caller to verify the integrity of a channel backup\nsnapshot. This method will accept either a packed Single or a packed Multi.\nSpecifying both will result in an error.",
+        "summary": "VerifyChanBackup allows a caller to verify the integrity of a channel backup\nsnapshot. This method will accept either a packed Single or a packed Multi.\nSpecifying both will result in an error.",
         "operationId": "Lightning_VerifyChanBackup",
         "responses": {
           "200": {
@@ -582,15 +574,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "include_raw_tx",
-            "description": "Indicates whether to include the raw transaction hex for\nwaiting_close_channels.",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          }
-        ],
         "tags": [
           "Lightning"
         ]
@@ -715,7 +698,7 @@
     },
     "/v1/channels/transactions": {
       "post": {
-        "summary": "Deprecated, use routerrpc.SendPaymentV2. SendPaymentSync is the synchronous\nnon-streaming version of SendPayment. This RPC is intended to be consumed by\nclients of the REST proxy. Additionally, this RPC expects the destination's\npublic key and the payment hash (if any) to be encoded as hex strings.",
+        "summary": "SendPaymentSync is the synchronous non-streaming version of SendPayment.\nThis RPC is intended to be consumed by clients of the REST proxy.\nAdditionally, this RPC expects the destination's public key and the payment\nhash (if any) to be encoded as hex strings.",
         "operationId": "Lightning_SendPaymentSync",
         "responses": {
           "200": {
@@ -748,7 +731,7 @@
     },
     "/v1/channels/transactions/route": {
       "post": {
-        "summary": "Deprecated, use routerrpc.SendToRouteV2. SendToRouteSync is a synchronous\nversion of SendToRoute. It Will block until the payment either fails or\nsucceeds.",
+        "summary": "SendToRouteSync is a synchronous version of SendToRoute. It Will block\nuntil the payment either fails or succeeds.",
         "operationId": "Lightning_SendToRouteSync",
         "responses": {
           "200": {
@@ -875,13 +858,6 @@
             "required": false,
             "type": "string",
             "format": "uint64"
-          },
-          {
-            "name": "no_wait",
-            "description": "If true, then the rpc call will not block while it awaits a closing txid.\nConsequently this RPC call will not return a closing txid if this value\nis set.",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
           }
         ],
         "tags": [
@@ -1077,29 +1053,6 @@
         ]
       }
     },
-    "/v1/getdebuginfo": {
-      "get": {
-        "summary": "lncli: 'getdebuginfo'\nGetDebugInfo returns debug information concerning the state of the daemon\nand its subsystems. This includes the full configuration and the latest log\nentries from the log file.",
-        "operationId": "Lightning_GetDebugInfo",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/lnrpcGetDebugInfoResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "Lightning"
-        ]
-      }
-    },
     "/v1/getinfo": {
       "get": {
         "summary": "lncli: `getinfo`\nGetInfo returns general information concerning the lightning node including\nit's identity pubkey, alias, the chains it is connected to, and information\nconcerning the number of open+pending channels.",
@@ -1204,13 +1157,6 @@
             "required": true,
             "type": "string",
             "format": "uint64"
-          },
-          {
-            "name": "chan_point",
-            "description": "The channel point of the channel in format funding_txid:output_index. If\nchan_id is specified, this field is ignored.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -1365,7 +1311,7 @@
           },
           {
             "name": "final_cltv_delta",
-            "description": "An optional CLTV delta from the current height that should be used for the\ntimelock of the final hop. Note that unlike SendPayment, QueryRoutes does\nnot add any additional block padding on top of final_ctlv_delta. This\npadding of a few blocks needs to be added manually or otherwise failures may\nhappen when a block comes in while the payment is in flight.\n\nNote: must not be set if making a payment to a blinded path (delta is\nset by the aggregate parameters provided by blinded_payment_paths)",
+            "description": "An optional CLTV delta from the current height that should be used for the\ntimelock of the final hop. Note that unlike SendPayment, QueryRoutes does\nnot add any additional block padding on top of final_ctlv_delta. This\npadding of a few blocks needs to be added manually or otherwise failures may\nhappen when a block comes in while the payment is in flight.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1447,7 +1393,7 @@
           },
           {
             "name": "dest_features",
-            "description": "Features assumed to be supported by the final node. All transitive feature\ndependencies must also be set properly. For a given feature bit pair, either\noptional or remote may be set, but not both. If this field is nil or empty,\nthe router will try to load destination features from the graph as a\nfallback.\n\nNote: must not be set if making a payment to a blinded route (features\nare provided in blinded_payment_paths).",
+            "description": "Features assumed to be supported by the final node. All transitive feature\ndependencies must also be set properly. For a given feature bit pair, either\noptional or remote may be set, but not both. If this field is nil or empty,\nthe router will try to load destination features from the graph as a\nfallback.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1477,8 +1423,6 @@
                 "ANCHORS_OPT",
                 "ANCHORS_ZERO_FEE_HTLC_REQ",
                 "ANCHORS_ZERO_FEE_HTLC_OPT",
-                "ROUTE_BLINDING_REQUIRED",
-                "ROUTE_BLINDING_OPTIONAL",
                 "AMP_REQ",
                 "AMP_OPT"
               ]
@@ -1547,7 +1491,7 @@
                 "final_cltv_delta": {
                   "type": "integer",
                   "format": "int32",
-                  "description": "An optional CLTV delta from the current height that should be used for the\ntimelock of the final hop. Note that unlike SendPayment, QueryRoutes does\nnot add any additional block padding on top of final_ctlv_delta. This\npadding of a few blocks needs to be added manually or otherwise failures may\nhappen when a block comes in while the payment is in flight.\n\nNote: must not be set if making a payment to a blinded path (delta is\nset by the aggregate parameters provided by blinded_payment_paths)"
+                  "description": "An optional CLTV delta from the current height that should be used for the\ntimelock of the final hop. Note that unlike SendPayment, QueryRoutes does\nnot add any additional block padding on top of final_ctlv_delta. This\npadding of a few blocks needs to be added manually or otherwise failures may\nhappen when a block comes in while the payment is in flight."
                 },
                 "fee_limit": {
                   "$ref": "#/definitions/lnrpcFeeLimit",
@@ -1613,19 +1557,12 @@
                   },
                   "description": "Optional route hints to reach the destination through private channels."
                 },
-                "blinded_payment_paths": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/lnrpcBlindedPaymentPath"
-                  },
-                  "description": "An optional blinded path(s) to reach the destination. Note that the\nintroduction node must be provided as the first hop in the route."
-                },
                 "dest_features": {
                   "type": "array",
                   "items": {
                     "$ref": "#/definitions/lnrpcFeatureBit"
                   },
-                  "description": "Features assumed to be supported by the final node. All transitive feature\ndependencies must also be set properly. For a given feature bit pair, either\noptional or remote may be set, but not both. If this field is nil or empty,\nthe router will try to load destination features from the graph as a\nfallback.\n\nNote: must not be set if making a payment to a blinded route (features\nare provided in blinded_payment_paths)."
+                  "description": "Features assumed to be supported by the final node. All transitive feature\ndependencies must also be set properly. For a given feature bit pair, either\noptional or remote may be set, but not both. If this field is nil or empty,\nthe router will try to load destination features from the graph as a\nfallback."
                 },
                 "time_pref": {
                   "type": "number",
@@ -1856,7 +1793,7 @@
     },
     "/v1/invoices/subscribe": {
       "get": {
-        "summary": "SubscribeInvoices returns a uni-directional stream (server -\u003e client) for\nnotifying the client of newly added/settled invoices. The caller can\noptionally specify the add_index and/or the settle_index. If the add_index\nis specified, then we'll first start by sending add invoice events for all\ninvoices with an add_index greater than the specified value. If the\nsettle_index is specified, then next, we'll send out all settle events for\ninvoices with a settle_index greater than the specified value. One or both\nof these fields can be set. If no fields are set, then we'll only send out\nthe latest add/settle events.",
+        "summary": "SubscribeInvoices returns a uni-directional stream (server -\u003e client) for\nnotifying the client of newly added/settled invoices. The caller can\noptionally specify the add_index and/or the settle_index. If the add_index\nis specified, then we'll first start by sending add invoice events for all\ninvoices with an add_index greater than the specified value. If the\nsettle_index is specified, the next, we'll send out all settle events for\ninvoices with a settle_index greater than the specified value. One or both\nof these fields can be set. If no fields are set, then we'll only send out\nthe latest add/settle events.",
         "operationId": "Lightning_SubscribeInvoices",
         "responses": {
           "200": {
@@ -2131,7 +2068,7 @@
     },
     "/v1/payment": {
       "delete": {
-        "summary": "lncli: `deletepayments`\nDeletePayment deletes an outgoing payment from DB. Note that it will not\nattempt to delete an In-Flight payment, since that would be unsafe.",
+        "summary": "DeletePayment deletes an outgoing payment from DB. Note that it will not\nattempt to delete an In-Flight payment, since that would be unsafe.",
         "operationId": "Lightning_DeletePayment",
         "responses": {
           "200": {
@@ -2227,7 +2164,7 @@
           },
           {
             "name": "creation_date_start",
-            "description": "If set, returns all payments with a creation date greater than or equal\nto it. Measured in seconds since the unix epoch.",
+            "description": "If set, returns all invoices with a creation date greater than or equal\nto it. Measured in seconds since the unix epoch.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2235,7 +2172,7 @@
           },
           {
             "name": "creation_date_end",
-            "description": "If set, returns all payments with a creation date less than or equal to\nit. Measured in seconds since the unix epoch.",
+            "description": "If set, returns all invoices with a creation date less than or equal to\nit. Measured in seconds since the unix epoch.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2247,7 +2184,7 @@
         ]
       },
       "delete": {
-        "summary": "lncli: `deletepayments --all`\nDeleteAllPayments deletes all outgoing payments from DB. Note that it will\nnot attempt to delete In-Flight payments, since that would be unsafe.",
+        "summary": "DeleteAllPayments deletes all outgoing payments from DB. Note that it will\nnot attempt to delete In-Flight payments, since that would be unsafe.",
         "operationId": "Lightning_DeleteAllPayments",
         "responses": {
           "200": {
@@ -2274,13 +2211,6 @@
           {
             "name": "failed_htlcs_only",
             "description": "Only delete failed HTLCs from payments, not the payment itself.",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "all_payments",
-            "description": "Delete all payments. NOTE: Using this option requires careful\nconsideration as it is a destructive operation.",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -2593,20 +2523,11 @@
             "type": "string"
           },
           {
-            "name": "index_offset",
-            "description": "The index of a transaction that will be used in a query to determine which\ntransaction should be returned in the response.",
+            "name": "reverse",
+            "description": "newest block first or otherwise, oldest block first.",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "max_transactions",
-            "description": "The maximal number of transactions returned in the response to this query.\nThis value should be set to 0 to return all transactions.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2687,19 +2608,6 @@
             "in": "query",
             "required": false,
             "type": "boolean"
-          },
-          {
-            "name": "coin_selection_strategy",
-            "description": "The strategy to use for selecting coins during fees estimation.\n\n - STRATEGY_USE_GLOBAL_CONFIG: Use the coin selection strategy defined in the global configuration\n(lnd.conf).\n - STRATEGY_LARGEST: Select the largest available coins first during coin selection.\n - STRATEGY_RANDOM: Randomly select the available coins during coin selection.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "STRATEGY_USE_GLOBAL_CONFIG",
-              "STRATEGY_LARGEST",
-              "STRATEGY_RANDOM"
-            ],
-            "default": "STRATEGY_USE_GLOBAL_CONFIG"
           }
         ],
         "tags": [
@@ -2792,20 +2700,11 @@
             "type": "string"
           },
           {
-            "name": "index_offset",
-            "description": "The index of a transaction that will be used in a query to determine which\ntransaction should be returned in the response.",
+            "name": "reverse",
+            "description": "newest block first or otherwise, oldest block first.",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "max_transactions",
-            "description": "The maximal number of transactions returned in the response to this query.\nThis value should be set to 0 to return all transactions.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2949,7 +2848,6 @@
         "EXPIRY_TOO_FAR",
         "MPP_TIMEOUT",
         "INVALID_ONION_PAYLOAD",
-        "INVALID_ONION_BLINDING",
         "INTERNAL_FAILURE",
         "UNKNOWN_FAILURE",
         "UNREADABLE_FAILURE"
@@ -2992,11 +2890,9 @@
         "UNKNOWN",
         "IN_FLIGHT",
         "SUCCEEDED",
-        "FAILED",
-        "INITIATED"
+        "FAILED"
       ],
-      "default": "UNKNOWN",
-      "description": " - UNKNOWN: Deprecated. This status will never be returned.\n - IN_FLIGHT: Payment has inflight HTLCs.\n - SUCCEEDED: Payment is settled.\n - FAILED: Payment is failed.\n - INITIATED: Payment is created and has not attempted any HTLCs."
+      "default": "UNKNOWN"
     },
     "PeerEventEventType": {
       "type": "string",
@@ -3159,11 +3055,6 @@
         "memo": {
           "type": "string",
           "description": "An optional note-to-self to go along with the channel containing some\nuseful information. This is only ever stored locally and in no way\nimpacts the channel's operation."
-        },
-        "custom_channel_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "Custom channel data that might be populated in custom channels."
         }
       }
     },
@@ -3215,10 +3106,6 @@
         "closing_txid": {
           "type": "string",
           "title": "The transaction id of the closing transaction"
-        },
-        "closing_tx_hex": {
-          "type": "string",
-          "description": "The raw hex encoded bytes of the closing transaction. Included if\ninclude_raw_tx in the request is true."
         }
       }
     },
@@ -3295,13 +3182,7 @@
       }
     },
     "lnrpcAbandonChannelResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the abandon operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcAddInvoiceResponse": {
       "type": "object",
@@ -3322,7 +3203,7 @@
         "payment_addr": {
           "type": "string",
           "format": "byte",
-          "description": "The payment address of the generated invoice. This is also called\npayment secret in specifications (e.g. BOLT 11). This value should be used\nin all payments for this invoice as we require it for end to end security."
+          "description": "The payment address of the generated invoice. This value should be used\nin all payments for this invoice as we require it for end to end\nsecurity."
         }
       }
     },
@@ -3532,10 +3413,6 @@
         "label": {
           "type": "string",
           "description": "An optional label for the batch transaction, limited to 500 characters."
-        },
-        "coin_selection_strategy": {
-          "$ref": "#/definitions/lnrpcCoinSelectionStrategy",
-          "description": "The strategy to use for selecting coins during batch opening channels."
         }
       }
     },
@@ -3550,118 +3427,12 @@
         }
       }
     },
-    "lnrpcBlindedHop": {
-      "type": "object",
-      "properties": {
-        "blinded_node": {
-          "type": "string",
-          "format": "byte",
-          "description": "The blinded public key of the node."
-        },
-        "encrypted_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "An encrypted blob of data provided to the blinded node."
-        }
-      }
-    },
-    "lnrpcBlindedPath": {
-      "type": "object",
-      "properties": {
-        "introduction_node": {
-          "type": "string",
-          "format": "byte",
-          "description": "The unblinded pubkey of the introduction node for the route."
-        },
-        "blinding_point": {
-          "type": "string",
-          "format": "byte",
-          "description": "The ephemeral pubkey used by nodes in the blinded route."
-        },
-        "blinded_hops": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/lnrpcBlindedHop"
-          },
-          "description": "A set of blinded node keys and data blobs for the blinded portion of the\nroute. Note that the first hop is expected to be the introduction node,\nso the route is always expected to have at least one hop."
-        }
-      }
-    },
-    "lnrpcBlindedPathConfig": {
-      "type": "object",
-      "properties": {
-        "min_num_real_hops": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The minimum number of real hops to include in a blinded path. This doesn't\ninclude our node, so if the minimum is 1, then the path will contain at\nminimum our node along with an introduction node hop. If it is zero then\nthe shortest path will use our node as an introduction node."
-        },
-        "num_hops": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The number of hops to include in a blinded path. This doesn't include our\nnode, so if it is 1, then the path will contain our node along with an\nintroduction node or dummy node hop. If paths shorter than NumHops is\nfound, then they will be padded using dummy hops."
-        },
-        "max_num_paths": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The maximum number of blinded paths to select and add to an invoice."
-        },
-        "node_omission_list": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "byte"
-          },
-          "description": "A list of node IDs of nodes that should not be used in any of our generated\nblinded paths."
-        }
-      }
-    },
-    "lnrpcBlindedPaymentPath": {
-      "type": "object",
-      "properties": {
-        "blinded_path": {
-          "$ref": "#/definitions/lnrpcBlindedPath",
-          "description": "The blinded path to send the payment to."
-        },
-        "base_fee_msat": {
-          "type": "string",
-          "format": "uint64",
-          "description": "The base fee for the blinded path provided, expressed in msat."
-        },
-        "proportional_fee_rate": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The proportional fee for the blinded path provided, expressed in parts\nper million."
-        },
-        "total_cltv_delta": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The total CLTV delta for the blinded path provided, including the\nfinal CLTV delta for the receiving node."
-        },
-        "htlc_min_msat": {
-          "type": "string",
-          "format": "uint64",
-          "description": "The minimum hltc size that may be sent over the blinded path, expressed\nin msat."
-        },
-        "htlc_max_msat": {
-          "type": "string",
-          "format": "uint64",
-          "description": "The maximum htlc size that may be sent over the blinded path, expressed\nin msat."
-        },
-        "features": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/lnrpcFeatureBit"
-          },
-          "description": "The feature bits for the route."
-        }
-      }
-    },
     "lnrpcChain": {
       "type": "object",
       "properties": {
         "chain": {
           "type": "string",
-          "title": "Deprecated. The chain is now always assumed to be bitcoin.\nThe blockchain the node is on (must be bitcoin)"
+          "title": "The blockchain the node is on (eg bitcoin, litecoin)"
         },
         "network": {
           "type": "string",
@@ -3712,10 +3483,6 @@
           "type": "integer",
           "format": "int64",
           "description": "This uint32 indicates if this channel is to be considered 'frozen'. A frozen\nchannel does not allow a cooperative channel close by the initiator. The\nthaw_height is the height that this restriction stops applying to the\nchannel. The height can be interpreted in two ways: as a relative height if\nthe value is less than 500,000, or as an absolute height otherwise."
-        },
-        "musig2": {
-          "type": "boolean",
-          "description": "Indicates that the funding output is using a MuSig2 multi-sig output."
         }
       }
     },
@@ -3892,11 +3659,6 @@
         "memo": {
           "type": "string",
           "description": "An optional note-to-self to go along with the channel containing some\nuseful information. This is only ever stored locally and in no way impacts\nthe channel's operation."
-        },
-        "custom_channel_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "Custom channel data that might be populated in custom channels."
         }
       }
     },
@@ -4100,11 +3862,6 @@
         "pending_open_remote_balance": {
           "$ref": "#/definitions/lnrpcAmount",
           "description": "Sum of channels pending remote balances."
-        },
-        "custom_channel_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "Custom channel data that might be populated if there are custom channels\npresent."
         }
       }
     },
@@ -4194,21 +3951,6 @@
         },
         "success": {
           "type": "boolean"
-        },
-        "local_close_output": {
-          "$ref": "#/definitions/lnrpcCloseOutput",
-          "description": "The local channel close output. If the local channel balance was dust to\nbegin with, this output will not be set."
-        },
-        "remote_close_output": {
-          "$ref": "#/definitions/lnrpcCloseOutput",
-          "description": "The remote channel close output. If the remote channel balance was dust\nto begin with, this output will not be set."
-        },
-        "additional_outputs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/lnrpcCloseOutput"
-          },
-          "description": "Any additional outputs that might be added for custom channel types."
         }
       }
     },
@@ -4367,16 +4109,6 @@
           "type": "number",
           "format": "double",
           "description": "The effective fee rate in milli-satoshis. Computed by dividing the\nfee_per_mil value by 1 million."
-        },
-        "inbound_base_fee_msat": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The base fee charged regardless of the number of milli-satoshis sent."
-        },
-        "inbound_fee_per_mil": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The amount charged per milli-satoshis transferred expressed in\nmillionths of a satoshi."
         }
       }
     },
@@ -4518,30 +4250,6 @@
         }
       }
     },
-    "lnrpcCloseOutput": {
-      "type": "object",
-      "properties": {
-        "amount_sat": {
-          "type": "string",
-          "format": "int64",
-          "description": "The amount in satoshi of this close output. This amount is the final\ncommitment balance of the channel and the actual amount paid out on chain\nmight be smaller due to subtracted fees."
-        },
-        "pk_script": {
-          "type": "string",
-          "format": "byte",
-          "description": "The pkScript of the close output."
-        },
-        "is_local": {
-          "type": "boolean",
-          "description": "Whether this output is for the local or remote node."
-        },
-        "custom_channel_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "The TLV encoded custom channel data records for this output, which might\nbe set for custom channels."
-        }
-      }
-    },
     "lnrpcCloseStatusUpdate": {
       "type": "object",
       "properties": {
@@ -4550,9 +4258,6 @@
         },
         "chan_close": {
           "$ref": "#/definitions/lnrpcChannelCloseUpdate"
-        },
-        "close_instant": {
-          "$ref": "#/definitions/lnrpcInstantUpdate"
         }
       }
     },
@@ -4588,16 +4293,6 @@
         }
       }
     },
-    "lnrpcCoinSelectionStrategy": {
-      "type": "string",
-      "enum": [
-        "STRATEGY_USE_GLOBAL_CONFIG",
-        "STRATEGY_LARGEST",
-        "STRATEGY_RANDOM"
-      ],
-      "default": "STRATEGY_USE_GLOBAL_CONFIG",
-      "description": " - STRATEGY_USE_GLOBAL_CONFIG: Use the coin selection strategy defined in the global configuration\n(lnd.conf).\n - STRATEGY_LARGEST: Select the largest available coins first during coin selection.\n - STRATEGY_RANDOM: Randomly select the available coins during coin selection."
-    },
     "lnrpcCommitmentType": {
       "type": "string",
       "enum": [
@@ -4606,11 +4301,10 @@
         "STATIC_REMOTE_KEY",
         "ANCHORS",
         "SCRIPT_ENFORCED_LEASE",
-        "SIMPLE_TAPROOT",
-        "SIMPLE_TAPROOT_OVERLAY"
+        "SIMPLE_TAPROOT"
       ],
       "default": "UNKNOWN_COMMITMENT_TYPE",
-      "description": " - UNKNOWN_COMMITMENT_TYPE: Returned when the commitment type isn't known or unavailable.\n - LEGACY: A channel using the legacy commitment format having tweaked to_remote\nkeys.\n - STATIC_REMOTE_KEY: A channel that uses the modern commitment format where the key in the\noutput of the remote party does not change each state. This makes back\nup and recovery easier as when the channel is closed, the funds go\ndirectly to that key.\n - ANCHORS: A channel that uses a commitment format that has anchor outputs on the\ncommitments, allowing fee bumping after a force close transaction has\nbeen broadcast.\n - SCRIPT_ENFORCED_LEASE: A channel that uses a commitment type that builds upon the anchors\ncommitment format, but in addition requires a CLTV clause to spend outputs\npaying to the channel initiator. This is intended for use on leased channels\nto guarantee that the channel initiator has no incentives to close a leased\nchannel before its maturity date.\n - SIMPLE_TAPROOT: A channel that uses musig2 for the funding output, and the new tapscript\nfeatures where relevant.\n - SIMPLE_TAPROOT_OVERLAY: Identical to the SIMPLE_TAPROOT channel type, but with extra functionality.\nThis channel type also commits to additional meta data in the tapscript\nleaves for the scripts in a channel."
+      "title": "- UNKNOWN_COMMITMENT_TYPE: Returned when the commitment type isn't known or unavailable.\n - LEGACY: A channel using the legacy commitment format having tweaked to_remote\nkeys.\n - STATIC_REMOTE_KEY: A channel that uses the modern commitment format where the key in the\noutput of the remote party does not change each state. This makes back\nup and recovery easier as when the channel is closed, the funds go\ndirectly to that key.\n - ANCHORS: A channel that uses a commitment format that has anchor outputs on the\ncommitments, allowing fee bumping after a force close transaction has\nbeen broadcast.\n - SCRIPT_ENFORCED_LEASE: A channel that uses a commitment type that builds upon the anchors\ncommitment format, but in addition requires a CLTV clause to spend outputs\npaying to the channel initiator. This is intended for use on leased channels\nto guarantee that the channel initiator has no incentives to close a leased\nchannel before its maturity date.\n - SIMPLE_TAPROOT: TODO(roasbeef): need script enforce mirror type for the above as well?"
     },
     "lnrpcConnectPeerRequest": {
       "type": "object",
@@ -4631,13 +4325,7 @@
       }
     },
     "lnrpcConnectPeerResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the connect operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcCustomMessage": {
       "type": "object",
@@ -4679,13 +4367,7 @@
       }
     },
     "lnrpcDeleteAllPaymentsResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the delete operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcDeleteMacaroonIDResponse": {
       "type": "object",
@@ -4697,22 +4379,10 @@
       }
     },
     "lnrpcDeletePaymentResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the delete operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcDisconnectPeerResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the disconnect operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcEdgeLocator": {
       "type": "object",
@@ -4848,8 +4518,6 @@
         "ANCHORS_OPT",
         "ANCHORS_ZERO_FEE_HTLC_REQ",
         "ANCHORS_ZERO_FEE_HTLC_OPT",
-        "ROUTE_BLINDING_REQUIRED",
-        "ROUTE_BLINDING_OPTIONAL",
         "AMP_REQ",
         "AMP_OPT"
       ],
@@ -5112,23 +4780,6 @@
         }
       }
     },
-    "lnrpcGetDebugInfoResponse": {
-      "type": "object",
-      "properties": {
-        "config": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "log": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "lnrpcGetInfoResponse": {
       "type": "object",
       "properties": {
@@ -5203,7 +4854,7 @@
           "items": {
             "$ref": "#/definitions/lnrpcChain"
           },
-          "description": "A list of active chains the node is connected to. This will only\never contain a single entry since LND will only ever have a single\nchain backend during its lifetime."
+          "title": "A list of active chains the node is connected to"
         },
         "uris": {
           "type": "array",
@@ -5402,21 +5053,6 @@
           "type": "string",
           "format": "byte",
           "description": "The payment metadata to send along with the payment to the payee."
-        },
-        "blinding_point": {
-          "type": "string",
-          "format": "byte",
-          "description": "Blinding point is an optional blinding point included for introduction\nnodes in blinded paths. This field is mandatory for hops that represents\nthe introduction point in a blinded path."
-        },
-        "encrypted_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "Encrypted data is a receiver-produced blob of data that provides hops\nin a blinded route with forwarding data. As this data is encrypted by\nthe recipient, we will not be able to parse it - it is essentially an\narbitrary blob of data from our node's perspective. This field is\nmandatory for all hops in a blinded path, including the introduction\nnode."
-        },
-        "total_amt_msat": {
-          "type": "string",
-          "format": "uint64",
-          "description": "The total amount that is sent to the recipient (possibly across multiple\nHTLCs), as specified by the sender when making a payment to a blinded path.\nThis value is only set in the final hop payload of a blinded payment. This\nvalue is analogous to the MPPRecord that is used for regular (non-blinded)\nMPP payments."
         }
       }
     },
@@ -5449,21 +5085,6 @@
         }
       }
     },
-    "lnrpcInboundFee": {
-      "type": "object",
-      "properties": {
-        "base_fee_msat": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The inbound base fee charged regardless of the number of milli-satoshis\nreceived in the channel. By default, only negative values are accepted."
-        },
-        "fee_rate_ppm": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The effective inbound fee rate in micro-satoshis (parts per million).\nBy default, only negative values are accepted."
-        }
-      }
-    },
     "lnrpcInitiator": {
       "type": "string",
       "enum": [
@@ -5473,9 +5094,6 @@
         "INITIATOR_BOTH"
       ],
       "default": "INITIATOR_UNKNOWN"
-    },
-    "lnrpcInstantUpdate": {
-      "type": "object"
     },
     "lnrpcInterceptFeedback": {
       "type": "object",
@@ -5622,7 +5240,7 @@
         "payment_addr": {
           "type": "string",
           "format": "byte",
-          "description": "The payment address of this invoice. This is also called payment secret in\nspecifications (e.g. BOLT 11). This value will be used in MPP payments, and\nalso for newer invoices that always require the MPP payload for added\nend-to-end security.\nNote: Output only, don't specify for creating an invoice."
+          "description": "The payment address of this invoice. This value will be used in MPP\npayments, and also for newer invoices that always require the MPP payload\nfor added end-to-end security.\nNote: Output only, don't specify for creating an invoice."
         },
         "is_amp": {
           "type": "boolean",
@@ -5635,14 +5253,6 @@
           },
           "description": "Maps a 32-byte hex-encoded set ID to the sub-invoice AMP state for the\ngiven set ID. This field is always populated for AMP invoices, and can be\nused along side LookupInvoice to obtain the HTLC information related to a\ngiven sub-invoice.\nNote: Output only, don't specify for creating an invoice.",
           "title": "[EXPERIMENTAL]:"
-        },
-        "is_blinded": {
-          "type": "boolean",
-          "description": "Signals that the invoice should include blinded paths to hide the true\nidentity of the recipient."
-        },
-        "blinded_path_config": {
-          "$ref": "#/definitions/lnrpcBlindedPathConfig",
-          "description": "Config values to use when creating blinded paths for this invoice. These\ncan be used to override the defaults config values provided in by the\nglobal config. This field is only used if is_blinded is true."
         }
       }
     },
@@ -5704,11 +5314,6 @@
         "amp": {
           "$ref": "#/definitions/lnrpcAMP",
           "description": "Details relevant to AMP HTLCs, only populated if this is an AMP HTLC."
-        },
-        "custom_channel_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "Custom channel data that might be populated in custom channels."
         }
       },
       "title": "Details of an HTLC that paid to an invoice"
@@ -5943,7 +5548,7 @@
         "payment_addr": {
           "type": "string",
           "format": "byte",
-          "description": "A unique, random identifier used to authenticate the sender as the intended\npayer of a multi-path payment. The payment_addr must be the same for all\nsubpayments, and match the payment_addr provided in the receiver's invoice.\nThe same payment_addr must be used on all subpayments. This is also called\npayment secret in specifications (e.g. BOLT 11)."
+          "description": "A unique, random identifier used to authenticate the sender as the intended\npayer of a multi-path payment. The payment_addr must be the same for all\nsubpayments, and match the payment_addr provided in the receiver's invoice.\nThe same payment_addr must be used on all subpayments."
         },
         "total_amt_msat": {
           "type": "string",
@@ -6457,12 +6062,6 @@
           "additionalProperties": {
             "$ref": "#/definitions/lnrpcFeature"
           }
-        },
-        "blinded_paths": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/lnrpcBlindedPaymentPath"
-          }
         }
       }
     },
@@ -6539,14 +6138,6 @@
         },
         "failure_reason": {
           "$ref": "#/definitions/lnrpcPaymentFailureReason"
-        },
-        "first_hop_custom_records": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string",
-            "format": "byte"
-          },
-          "description": "The custom TLV records that were sent to the first hop as part of the HTLC\nwire message for this payment."
         }
       }
     },
@@ -6558,11 +6149,10 @@
         "FAILURE_REASON_NO_ROUTE",
         "FAILURE_REASON_ERROR",
         "FAILURE_REASON_INCORRECT_PAYMENT_DETAILS",
-        "FAILURE_REASON_INSUFFICIENT_BALANCE",
-        "FAILURE_REASON_CANCELED"
+        "FAILURE_REASON_INSUFFICIENT_BALANCE"
       ],
       "default": "FAILURE_REASON_NONE",
-      "description": " - FAILURE_REASON_NONE: Payment isn't failed (yet).\n - FAILURE_REASON_TIMEOUT: There are more routes to try, but the payment timeout was exceeded.\n - FAILURE_REASON_NO_ROUTE: All possible routes were tried and failed permanently. Or were no\nroutes to the destination at all.\n - FAILURE_REASON_ERROR: A non-recoverable error has occured.\n - FAILURE_REASON_INCORRECT_PAYMENT_DETAILS: Payment details incorrect (unknown hash, invalid amt or\ninvalid final cltv delta)\n - FAILURE_REASON_INSUFFICIENT_BALANCE: Insufficient local balance.\n - FAILURE_REASON_CANCELED: The payment was canceled."
+      "description": " - FAILURE_REASON_NONE: Payment isn't failed (yet).\n - FAILURE_REASON_TIMEOUT: There are more routes to try, but the payment timeout was exceeded.\n - FAILURE_REASON_NO_ROUTE: All possible routes were tried and failed permanently. Or were no\nroutes to the destination at all.\n - FAILURE_REASON_ERROR: A non-recoverable error has occured.\n - FAILURE_REASON_INCORRECT_PAYMENT_DETAILS: Payment details incorrect (unknown hash, invalid amt or\ninvalid final cltv delta)\n - FAILURE_REASON_INSUFFICIENT_BALANCE: Insufficient local balance."
     },
     "lnrpcPeer": {
       "type": "object",
@@ -6779,14 +6369,6 @@
         "min_htlc_msat_specified": {
           "type": "boolean",
           "description": "If true, min_htlc_msat is applied."
-        },
-        "inbound_fee": {
-          "$ref": "#/definitions/lnrpcInboundFee",
-          "description": "Optional inbound fee. If unset, the previously set value will be\nretained [EXPERIMENTAL]."
-        },
-        "create_missing_edge": {
-          "type": "boolean",
-          "description": "Under unknown circumstances a channel can exist with a missing edge in\nthe graph database. This can cause an 'edge not found' error when calling\n`getchaninfo` and/or cause the default channel policy to be used during\nforwards. Setting this flag will recreate the edge if not found, allowing\nupdating this channel policy and fixing the missing edge problem for this\nchannel permanently. For fields not set in this command, the default\npolicy will be created."
         }
       }
     },
@@ -6988,14 +6570,7 @@
       "description": " - ANCHOR: We resolved an anchor output.\n - INCOMING_HTLC: We are resolving an incoming htlc on chain. This if this htlc is\nclaimed, we swept the incoming htlc with the preimage. If it is timed\nout, our peer swept the timeout path.\n - OUTGOING_HTLC: We are resolving an outgoing htlc on chain. If this htlc is claimed,\nthe remote party swept the htlc with the preimage. If it is timed out,\nwe swept it with the timeout path.\n - COMMIT: We force closed and need to sweep our time locked commitment output."
     },
     "lnrpcRestoreBackupResponse": {
-      "type": "object",
-      "properties": {
-        "num_restored": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The number of channels successfully restored."
-        }
-      }
+      "type": "object"
     },
     "lnrpcRestoreChanBackupRequest": {
       "type": "object",
@@ -7045,16 +6620,6 @@
           "type": "string",
           "format": "int64",
           "description": "The total amount in millisatoshis."
-        },
-        "first_hop_amount_msat": {
-          "type": "string",
-          "format": "int64",
-          "description": "The actual on-chain amount that was sent out to the first hop. This value is\nonly different from the total_amt_msat field if this is a custom channel\npayment and the value transported in the HTLC is different from the BTC\namount in the HTLC. If this value is zero, then this is an old payment that\ndidn't have this value yet and can be ignored."
-        },
-        "custom_channel_data": {
-          "type": "string",
-          "format": "byte",
-          "description": "Custom channel data that might be populated in custom channels."
         }
       },
       "description": "A path through the channel graph which runs over one or more channels in\nsuccession. This struct carries all the information required to craft the\nSphinx onion packet, and send the payment along the first hop in the path. A\nroute is only selected as valid if all the channels have sufficient capacity to\ncarry the initial payment amount after fees are accounted for."
@@ -7108,14 +6673,6 @@
             "format": "byte"
           },
           "description": "Custom channel update tlv records."
-        },
-        "inbound_fee_base_msat": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "inbound_fee_rate_milli_msat": {
-          "type": "integer",
-          "format": "int32"
         }
       }
     },
@@ -7148,7 +6705,7 @@
         },
         "send_all": {
           "type": "boolean",
-          "description": "If set, the amount field should be unset. It indicates lnd will send all\nwallet coins or all selected coins to the specified address."
+          "description": "If set, then the amount field will be ignored, and lnd will attempt to\nsend all the coins under control of the internal wallet to the specified\naddress."
         },
         "label": {
           "type": "string",
@@ -7162,17 +6719,6 @@
         "spend_unconfirmed": {
           "type": "boolean",
           "description": "Whether unconfirmed outputs should be used as inputs for the transaction."
-        },
-        "coin_selection_strategy": {
-          "$ref": "#/definitions/lnrpcCoinSelectionStrategy",
-          "description": "The strategy to use for selecting coins."
-        },
-        "outpoints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/lnrpcOutPoint"
-          },
-          "description": "A list of selected outpoints as inputs for the transaction."
         }
       }
     },
@@ -7206,13 +6752,7 @@
       }
     },
     "lnrpcSendCustomMessageResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the send operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcSendManyRequest": {
       "type": "object",
@@ -7252,10 +6792,6 @@
         "spend_unconfirmed": {
           "type": "boolean",
           "description": "Whether unconfirmed outputs should be used as inputs for the transaction."
-        },
-        "coin_selection_strategy": {
-          "$ref": "#/definitions/lnrpcCoinSelectionStrategy",
-          "description": "The strategy to use for selecting coins during sending many requests."
         }
       }
     },
@@ -7349,7 +6885,7 @@
         "payment_addr": {
           "type": "string",
           "format": "byte",
-          "description": "The payment address of the generated invoice.  This is also called\npayment secret in specifications (e.g. BOLT 11)."
+          "description": "The payment address of the generated invoice."
         }
       }
     },
@@ -7417,13 +6953,7 @@
       "type": "object"
     },
     "lnrpcStopResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "The status of the stop operation."
-        }
-      }
+      "type": "object"
     },
     "lnrpcStreamAuth": {
       "type": "object",
@@ -7524,16 +7054,6 @@
             "$ref": "#/definitions/lnrpcTransaction"
           },
           "description": "The list of transactions relevant to the wallet."
-        },
-        "last_index": {
-          "type": "string",
-          "format": "uint64",
-          "description": "The index of the last item in the set of returned transactions. This can be\nused to seek further, pagination style."
-        },
-        "first_index": {
-          "type": "string",
-          "format": "uint64",
-          "description": "The index of the last item in the set of returned transactions. This can be\nused to seek backwards, pagination style."
         }
       }
     },
@@ -7580,15 +7100,7 @@
       }
     },
     "lnrpcVerifyChanBackupResponse": {
-      "type": "object",
-      "properties": {
-        "chan_points": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
+      "type": "object"
     },
     "lnrpcVerifyMessageRequest": {
       "type": "object",
