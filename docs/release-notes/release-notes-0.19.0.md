@@ -211,6 +211,8 @@
 `ProofMatureDelta` used in gossip to be configurable via
 `--gossip.announcement-conf`, with a default value of 6.
 
+* [Fix](https://github.com/lightningnetwork/lnd/pull/TBD) Added a `--reverse` flag to the `listchaintxns` rpc, to reverse the ordering of the transactions returned.
+
 ## lncli Updates
 
 ## Code Health
@@ -390,6 +392,7 @@ The underlying functionality between those two options remain the same.
 * Nishant Bansal
 * Oliver Gugger
 * Pins
+* kornpow
 * Viktor Tigerström
 * Yong Yu
 * Ziggie
